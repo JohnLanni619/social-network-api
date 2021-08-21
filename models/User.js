@@ -13,24 +13,38 @@ const UserSchema = new Schema(
             type: String,
             required: 'Email address is required',
             unique: true,
-            match: [/.+@.+\..+/]
+            match: [/^([a-z0-9_.-]+)@([\da-z.-]+).([a-z.]{2,6})$/]
         },
 
-        thoughts: {
-            // Array of _id values referencing the Thought model
-        },
-
-        friends: {
-            // Array of _id values referencing the User model (self-reference)
-        }
+        thoughts: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: 'Thought'
+            }
+        ],
+        // .populate method needs to be in the get request
+        friends: [
+            {
+                type: Schema.Types.ObjectId,
+                ref: 'User'
+            }
+        ]
+        // Am I self-referencing properly?
+        // .populate method needs to be in the get request
     },
     {
         toJSON: {
             virtuals: true
-        }
+        },
+        // prevents virtuals from creating duplicate of _id as `id`
+        id: false
     }
 );
 
 UserSchema.virtual('friendCount').get(function() {
     return this.friends.length;
 });
+
+const User = model('User', UserSchema);
+
+module.exports = User;
