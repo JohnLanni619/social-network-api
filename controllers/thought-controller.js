@@ -47,7 +47,17 @@ const thoughtController = {
     },
     
     // PUT to update a thought by its _id
-
+    updateThought({ params, body }, res) {
+        Thought.findOneAndUpdate({ _id: params.thoughtId }, body, { new: true, runValidators: true })
+            .then(dbThoughtData => {
+                if (!dbThoughtData) {
+                    res.sendStatus(404).json({ message: 'No thought found with this id!' });
+                    return;
+                }
+                res.json(dbThoughtData);
+            })
+            .catch(err => res.json(err));
+    },
     // DELETE to remove a thought by its _id
     removeThought({ params, body }, res) {
         Thought.findOneAndDelete({ _id: params.thoughtId })
@@ -73,8 +83,31 @@ const thoughtController = {
 // /api/thoughts/:thoughtId/reactions
 
     // POST to create a reaction stored in a single thought's reactions array field
-
+    addReaction({ params, body}, res) {
+        Thought.findOneAndUpdate(
+            { _id: params.thoughtId },
+            { $push: { reactions: body } },
+            { new: true, runValidators: true }
+        )
+            .then(dbThoughtData => {
+                if (!dbThoughtData) {
+                    res.status(404).json({ message: 'No thought found with this id!' });
+                    return;
+                }
+                res.json(dbThoughtData);
+            })
+            .catch(err => res.json(err));
+    },
     // DELETE to pull and remove a reaction by the reaction's reactionId value
-}
+    removeReaction({ params, body }, res) {
+        Thought.findOneAndUpdate(
+            { _id: params.thoughtId },
+            { $pull: { reactions: { reactionId: params.reactionId } } },
+            { new: true }
+        )
+            .then(dbThoughtData => res.json(dbThoughtData))
+            .catch(err => res.json(err));
+    }
+};
 
 module.exports = thoughtController;
